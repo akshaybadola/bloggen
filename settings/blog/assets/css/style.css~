@@ -1,0 +1,140 @@
+body {
+  background-color: #ff2222;
+  /* padding-top: 30px; */
+  font-size: 1.1em;
+}
+
+/* I don't think I want everything sticky now */
+/* .row.banner{ */
+/*     position: sticky; */
+/*     top: 0px; */
+/*     background-color: #ff0000; */
+/*     padding-top: 0; */
+/*     z-index:1000 */
+/* } */
+
+.row.banner.footer{
+    margin: 10px 0px 0px 0px;
+    position: bottom;
+    padding: 1em .2em .2em 2em;
+}
+
+
+h1.title {
+    padding: .5em .5em;
+}
+
+.row-fluid [class*="span"]
+{
+    box-shadow: 10px 10px 10px 0px black;
+}
+
+.row-fluid [class*="span"] h1
+{
+    font-size: 2.5em;
+}
+
+.row-fluid [class*="span"] h2
+{
+    font-size: 1.8em;
+}
+
+.math
+{
+    font-size: 1.05em;
+    color: #000000;
+}
+
+
+/* .math.display */
+/* { */
+/*     font-weight: 600; */
+/* } */
+
+.span3
+{
+    background-color: white;
+    /* background-color: rgba(20, 20, 255, .1); */
+}
+
+/* But I would like the menu to be sticky */
+.privy-menu
+{
+    background-color: rgba(20, 20, 255, .4);
+    font-size: .8em;
+    position: sticky;
+}
+
+.privy-menu ul
+{
+    /* background-color: rgba(0,0,255,0.3); */
+    /* padding: 2em 1.5em;     */
+}
+
+
+.privy-menu li
+{
+    border-top: 1px solid rgba(255,255,255,0.08);
+    background-color: rgba(0,0,255,0.3);
+    /* padding: 2em 1.5em;     */
+}
+
+.privy-menu li a, .menu li span
+{
+    display: block;
+    padding: .1em .1em;
+    /* text-align: center;  */
+    text-decoration:  none;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: rgba(10,10,10,0.9);
+}
+
+.privy-menu li a:hover
+{
+    color: rgba(255,255,255,0.8);
+    text-shadow: -.5px .5px black;
+}
+
+/* .privy-menu ul:hover a, .menu ul.active a, .menu ul.active span */
+/* { */
+/*     color: rgba(100,100,100,0.8);     */
+/* } */
+
+/* .privy-menu li:hover a, .menu li.active a, .menu li.active span */
+/* { */
+/*     color: rgba(200,200,200,0.8);     */
+/* } */
+
+.privy-menu .current_page_item a
+{
+    background: #2980b9;
+    color: rgba(255,255,255,1);
+}
+
+.privy-menu .icon
+{
+}
+
+.main {
+  background-color: #fff;
+  border: 1px solid #CCC;
+  padding: 40px;
+}
+
+.container {
+  width: 1100px;
+}
+
+.nav-list {
+  font-size: 17px;
+}
+.nav-header {
+  font-size: 17px;
+  text-transform: none;
+  line-height: 30px;
+}
+.sidebar-header-2 { margin-left: 10px; }
+.sidebar-header-3 { margin-left: 20px; }
+.sidebar-header-4 { margin-left: 30px; }
+.sidebar-header-5 { margin-left: 40px; }

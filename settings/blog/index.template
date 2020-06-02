@@ -1,0 +1,83 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"$if(lang)$ lang="$lang$" xml:lang="$lang$"$endif$>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta http-equiv="Content-Style-Type" content="text/css" />
+    <meta name="generator" content="pandoc" />
+    $for(author-meta)$ <meta name="author" content="$author-meta$" /> $endfor$
+    $if(date-meta)$ <meta name="date" content="$date-meta$" /> $endif$
+
+    <!-- Perhaps change this to something else?     -->
+    <title>$if(title-prefix)$$title-prefix$ - $endif$$pagetitle$</title>
+    <!-- <style type="text/css">code{white-space: pre;}</style> -->
+
+    <!-- What's this? Quotes?-->
+    $if(quotes)$ <style type="text/css">q { quotes: "“" "”" "‘" "’"; }</style> $endif$
+
+    <!-- highlighting must add -->
+    $if(highlighting-css)$ <style type="text/css"> $highlighting-css$ </style> $endif$
+
+    <!--Custom CSS styles. Should be more elegant but... -->
+    <!--Maybe I can put a for loop here-->
+    <link type="text/css" rel="stylesheet" href="assets/css/bootstrap.css"/>
+    <link type="text/css" rel="stylesheet" href="assets/css/bootstrap-responsive.css"/>
+    <link type="text/css" rel="stylesheet" href="assets/css/pilcrow.css"/>
+    <link type="text/css" rel="stylesheet" href="assets/css/hljs-github.min.css"/>
+    <link type="text/css" rel="stylesheet" href="assets/css/style.css"/>
+    <!--End -->
+
+    $for(css)$ <link rel="stylesheet" href="$css$" $if(html5)$$else$type="text/css" $endif$/> $endfor$
+    $for(header-includes)$ $header-includes$ $endfor$
+
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+      extensions: ["tex2jax.js"],
+      jax: ["input/TeX","output/HTML-CSS"],
+      tex2jax: {inlineMath: [["$$","$$"],["\\(","\\)"]]}});
+    </script>
+    <script type="text/javascript" async
+            src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js">
+    </script>
+    <script type="text/javascript"
+            src="assets/js/backref.js">
+    </script>
+
+  </head>
+  <body>
+      <div class="banner">
+	<!-- Title -->
+	$if(title)$ <div id="$idprefix$header" align="center"> <h1 class="title">$title$</h1>
+	  $if(subtitle)$ <h1 class="subtitle">$subtitle$</h1> $endif$
+	  $endif$
+	</div>
+      </div>
+
+    <!-- Other custom includes? Before?-->
+    $for(include-before)$ $include-before$ $endfor$
+
+      <div class="menu-container">
+        <div class="menu-content">
+          $$INDEX_TOC$$
+        </div>
+      </div>
+
+    <div class="main parent">
+      <div class="main parent content">
+	$body$
+        $$SNIPPETS$$
+      </div>
+    </div>
+
+      <!-- <div class="row banner footer"> -->
+      <!-- 	<\!-- Include author and date -\-> -->
+      <!-- 	$for(author)$ <p class="author">$author$</p> $endfor$ -->
+      <!-- 	$if(date)$ <p class="date">$date$</p> $endif$ -->
+      <!-- </div> -->
+    
+
+    $for(include-after)$ $include-after$ $endfor$
+    <!-- <script type="text/javascript" src="$layout_dir$/assets/js/jquery-3.3.1.js"></script> -->
+      <!-- <script type="text/javascript" src="assets/js/bootstrap.min.js"></script> -->
+      <script type="text/javascript">document.onload=backrefs();</script>
+  </body>
+</html>
