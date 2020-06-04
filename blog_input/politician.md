@@ -2,8 +2,6 @@
 title: The Politician
 author: Akshay Badola
 date: 2019-11-06
-link-citations: true
-mathjax: ./settings/MathJax
 category: misc
 keywords: netflix, web series
 tags: random, musings

@@ -32,6 +32,7 @@ def snippet_string_with_category(snippet, path, date, category, tags=None, cat_p
 <p>Posted on: {date}, in Category: <a href="{cat_path_prefix}{category}.html">{category}</a>""" +\
         (f", tags: {tags}</p></div>" if tags else "</p></div>")
 
+
 class BlogGenerator:
     def __init__(self):
         self.output_dir = "blog_output"
@@ -63,10 +64,9 @@ class BlogGenerator:
     #      DONE: Should I do it for all files again and again or
     #      should I check for changes from last time?
     #    - update index.html DONE
-    #    - CHECK: Add any new generated html files (with folder if required which has
-    #      images/docs etc.)
+    # 3. TODO: Handle additional files (like images and stuff for the generated html files)
     # NOTE: I think filter by single tag can be done statically,
-    #       but filter by multiple tag has to be JS
+    #       but filter by multiple tags has to be JS
     def sanity_check(self):
         if not os.path.exists(self.output_dir):
             os.mkdir(self.output_dir)
@@ -96,7 +96,12 @@ class BlogGenerator:
                     files_data["files"][f]["hash"] = hash
                     files_data["files"][f]["metadata"] = self.extract_metadata(
                         os.path.join(self.input_dir, f))
-                    files_data["files"][f]["update"] = True
+                    metadata = files_data["files"][f]["metadata"]
+                    if "ignore" in metadata and metadata["ignore"]:
+                        print(f"Ingore set to true. Ignoring file {f}")
+                        files_data["files"].pop(f)
+                    else:
+                        files_data["files"][f]["update"] = True
                 else:
                     with open(os.path.join(self.input_dir, f)) as _f:
                         hash = hashlib.md5(_f.read().encode("utf-8")).hexdigest()
@@ -104,7 +109,12 @@ class BlogGenerator:
                         files_data["files"][f]["hash"] = hash
                         files_data["files"][f]["metadata"] = self.extract_metadata(
                             os.path.join(self.input_dir, f))
-                        files_data["files"][f]["update"] = True
+                        metadata = files_data["files"][f]["metadata"]
+                        if "ignore" in metadata and not metadata["ignore"]:
+                            files_data["files"][f]["update"] = True
+                        else:
+                            files_data["files"].pop(f)
+                            print(f"Ingore set to true. Ignoring file {f}")
                     else:
                         files_data["files"][f]["update"] = False
         with open(self.files_data, "w") as dump_file:
@@ -114,6 +124,8 @@ class BlogGenerator:
     def generate_post_page(self, post_file):
         p = Popen(f"/usr/bin/pandoc -r markdown+simple_tables+table_captions+yaml_metadata_block+raw_html --toc -t html -F pandoc-citeproc --csl=settings/csl/ieee.csl  --template=settings/blog/post.template -V layout_dir=settings/blog  {post_file}", shell=True, stdout=PIPE, stderr=PIPE)
         out, err = p.communicate()
+        if err:
+            print(err)
         page = out.decode("utf-8")
         return page
 
@@ -131,8 +143,10 @@ class BlogGenerator:
         categories = {}
         for fname, fval in self.files_data["files"].items():
             meta = fval["metadata"]
-            if "category" in meta and meta["category"] not in categories:  # avoid root pages
-                categories[meta["category"]] = []
+            # page without category is a root page
+            if "category" in meta:
+                if meta["category"] not in categories:
+                    categories[meta["category"]] = []
                 categories[meta["category"]].append(fname)
         self.categories = [*categories.keys()]
         for cat, pages in categories.items():
@@ -157,7 +171,7 @@ class BlogGenerator:
                 temp["snippet"] = self.get_snippet_content(html_file)
                 temp["path"] = "/".join([cat, page.replace(".md", ".html")])
                 data.append(temp)
-                if not i:
+                if not i:       # ignore heading
                     index_data.append({**temp, "category": cat})
             print(f"Generating category {cat} page")
             self.generate_category_page(cat, data)
@@ -173,7 +187,8 @@ class BlogGenerator:
             while len(text) <= 70:
                 para = paras.pop(0)
                 text.extend(para.text.split(" "))
-            self._snippet_cache[html_file] = SimpleNamespace(**{"heading": heading, "text": " ".join(text)})
+            self._snippet_cache[html_file] = SimpleNamespace(
+                **{"heading": heading, "text": " ".join(text)})
         return self._snippet_cache[html_file]
 
     # NOTE: modify this to change index menu, rest should be similar

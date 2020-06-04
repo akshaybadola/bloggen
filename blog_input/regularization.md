@@ -4,7 +4,6 @@ author: Akshay Badola
 date: 2018-07-04
 bibliography: ./all.bib
 link-citations: true
-mathjax: ./settings/MathJax
 keywords: regularization, dropout, deep learning, neural networks, machine learning
 category: research
 tags: dropout, regularization, machine learning, neural networks
