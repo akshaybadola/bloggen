@@ -1,0 +1,10 @@
+{
+    "index": ["Badola's Blog and Stuff", "Hark! A Vagrant", "A Blog"],
+    "misc": ["Badola's Blog and Stuff", "Something Smells Funny", "There is a Light that Never Goes Out",
+             "Into the Abyss"],
+    "emacs": ["This Emacs Life", "In the Beginning there was Nothing, then God created Lisp"],
+    "programming": ["void *ptr", "The code is Compiling!", "The Model is Training!"],
+    "research": ["Are we there yet?", "Show me the Data!",
+                 "In God we Trust, All Others Bring Data",
+                 "I Love you Logic, You Just Make Sense"]
+}

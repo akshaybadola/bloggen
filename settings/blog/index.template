@@ -41,17 +41,16 @@
     <script type="text/javascript"
             src="assets/js/backref.js">
     </script>
-
   </head>
   <body>
-      <div class="banner">
-	<!-- Title -->
+    <div class="banner">
+      <!-- Title -->
 	$if(title)$ <div id="$idprefix$header" align="center"> <h1 class="title">$title$</h1>
-	  $if(subtitle)$ <h1 class="subtitle">$subtitle$</h1> $endif$
-	  $endif$
-	</div>
+	$if(subtitle)$ <h1 class="subtitle">$subtitle$</h1> $endif$
+	$endif$
       </div>
-
+    </div>
+    $$TITLES_FILE$$
     <!-- Other custom includes? Before?-->
     $for(include-before)$ $include-before$ $endfor$
 

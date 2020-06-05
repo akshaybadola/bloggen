@@ -35,8 +35,6 @@
       jax: ["input/TeX","output/HTML-CSS"],
       tex2jax: {inlineMath: [["$$","$$"],["\\(","\\)"]]}});
     </script>
-    <script type="text/javascript" src=$if(mathjax)$"$mathjax$/MathJax.js"$else$"MathJax/MathJax.js"$endif$>
-    </script>
     <script type="text/javascript" async
             src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js">
     </script>
@@ -46,14 +44,14 @@
 
   </head>
   <body>
-      <div class="banner">
-	<!-- Title -->
-	$if(title)$ <div id="$idprefix$header" align="center"> <h1 class="title">$title$</h1>
-	  $if(subtitle)$ <h1 class="subtitle">$subtitle$</h1> $endif$
-	  $endif$
-	</div>
+    <div class="banner">
+      <!-- Title -->
+      $if(title)$ <div id="$idprefix$header" align="center"> <h1 class="title">$title$</h1>
+	$if(subtitle)$ <h1 class="subtitle">$subtitle$</h1> $endif$
+	$endif$
       </div>
-
+    </div>
+    $$TITLES_FILE$$
     <!-- Other custom includes? Before?-->
     $for(include-before)$ $include-before$ $endfor$
 

@@ -1,4 +1,5 @@
 import os
+import re
 import yaml
 import json
 import shutil
@@ -6,6 +7,14 @@ import hashlib
 from subprocess import Popen, PIPE
 from bs4 import BeautifulSoup
 from types import SimpleNamespace
+
+
+def title_file_string():
+    return """const titles = $TITLES$;
+const index = Math.floor(Math.random() * titles.length);
+const title = titles[index];
+document.title = title;
+document.getElementById("header").children[0].textContent = title;"""
 
 
 def snippet_string(snippet, path, date, tags=None):
@@ -46,6 +55,7 @@ class BlogGenerator:
         self.run_pipeline()
 
     def run_pipeline(self):
+        self.load_titles()
         self.check_for_changes()
         self.update_category_and_post_pages()
         if self.index_data:     # only if updates needed
@@ -53,6 +63,16 @@ class BlogGenerator:
         self.generate_tag_pages()
         self.generate_other_pages()
         # preview and push?
+
+    def load_titles(self):
+        print("Loading titles and generating files")
+        with open("blog_input/titles.json") as f:
+            self.titles = json.load(f)
+        tf_string = title_file_string()
+        for k, v in self.titles.items():
+            print(f"Generated titles for {k}")
+            with open(f"blog_output/assets/js/{k}_titles.js", "w") as f:
+                f.write(tf_string.replace("$TITLES$", str(v)))
 
     # NOTE:
     # The blog post processor should
@@ -121,12 +141,13 @@ class BlogGenerator:
             json.dump(files_data, dump_file, default=str)
         self.files_data = files_data
 
-    def generate_post_page(self, post_file):
+    def generate_post_page(self, post_file, category):
         p = Popen(f"/usr/bin/pandoc -r markdown+simple_tables+table_captions+yaml_metadata_block+raw_html --toc -t html -F pandoc-citeproc --csl=settings/csl/ieee.csl  --template=settings/blog/post.template -V layout_dir=settings/blog  {post_file}", shell=True, stdout=PIPE, stderr=PIPE)
         out, err = p.communicate()
         if err:
             print(err)
         page = out.decode("utf-8")
+        page = self.fix_title(category, page, prefix=True)
         return page
 
     # TODO: code formatting for programming stuff
@@ -134,8 +155,10 @@ class BlogGenerator:
         for fname, fval in self.files_data["files"].items():
             if fval["update"] and "category" in fval["metadata"]:
                 print(f"Generating post {fname}")
-                page = self.generate_post_page(os.path.join(self.input_dir, fname))
-                with open(os.path.join(self.output_dir, fval["metadata"]["category"].lower(),
+                category = fval["metadata"]["category"]
+                page = self.generate_post_page(os.path.join(self.input_dir, fname),
+                                               category)
+                with open(os.path.join(self.output_dir, category.lower(),
                                        fname.replace(".md", ".html")), "w") as f:
                     f.write(page)
 
@@ -181,7 +204,7 @@ class BlogGenerator:
         if html_file not in self._snippet_cache:
             with open(html_file) as f:
                 soup = BeautifulSoup(f.read(), features="lxml")
-            heading = soup.find("h1").text
+            heading = soup.find("title").text
             paras = soup.findAll("p")
             text = []
             while len(text) <= 70:
@@ -204,6 +227,23 @@ class BlogGenerator:
         menu.append("</ul>")
         return "".join(menu)
 
+    def fix_title(self, category, page, prefix=False):
+        category = category.lower()
+        if category in self.titles:
+            if prefix:
+                script_tag = f'<script type="text/javascript" src="../assets/js/{category}_titles.js"></script>'
+            else:
+                script_tag = f'<script type="text/javascript" src="assets/js/{category}_titles.js"></script>'
+            page = page.replace("$TITLES_FILE$", script_tag)
+            default_title = self.titles[category][0]
+        else:
+            print(f"Category {category} not in titles.json")
+            page = page.replace("$TITLES_FILE$", "")
+            default_title = self.titles["index"][0]
+        return re.sub('<h1 class="title">.*</h1>',
+                      f'<h1 class="title">{default_title}</h1>',
+                      page)
+
     # TODO: This should be done with pypandoc maybe
     #       so let's leave it here for now
     def generate_index_page(self, data):
@@ -225,6 +265,7 @@ class BlogGenerator:
             category = d["category"]
             snippets.append(snippet_string_with_category(snippet, path, date, category, tags))
         page = page.replace("$SNIPPETS$", "\n".join(snippets))
+        page = self.fix_title("index", page)
         with open(index_path, "w") as f:
             f.write(page)
 
@@ -247,6 +288,7 @@ class BlogGenerator:
             snippet = d["snippet"]
             snippets.append(snippet_string(snippet, path, date, tags))
         page = page.replace("$SNIPPETS$", "\n".join(snippets))
+        page = self.fix_title(category, page)
         with open(os.path.join(self.output_dir, f"{category}.html"), "w") as f:
             f.write(page)
 
@@ -284,6 +326,7 @@ class BlogGenerator:
                 snippets.append(snippet_string_with_category(snippet, path, date, category,
                                                              cat_path_prefix="../"))
             tag_page = tag_page.replace("$SNIPPETS$", "\n".join(snippets))
+            tag_page = self.fix_title("index", tag_page, True)
             with open(os.path.join(self.tag_pages_dir, f"{tag}.html"), "w") as f:
                 f.write(tag_page)
 
