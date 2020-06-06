@@ -57,12 +57,19 @@
 
     <div class="menu-container">
       <div class="menu-content">
+        <ul>
+          <li><a href="../index.html">
+              <span style="font-weight:900">Home</span>
+            </a>
+          </li>
+        </ul>
     	$if(toc)$ <div id="$idprefix$TOC"> $toc$ $endif$
     	</div>
       </div>
     </div>
     <div class="main parent">
       <div class="main parent content">
+        $$ADD_DATA$$
 	$body$
       </div>
     </div>

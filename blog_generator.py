@@ -4,6 +4,8 @@ import yaml
 import json
 import shutil
 import hashlib
+import argparse
+import configparser
 from subprocess import Popen, PIPE
 from bs4 import BeautifulSoup
 from types import SimpleNamespace
@@ -43,20 +45,19 @@ def snippet_string_with_category(snippet, path, date, category, tags=None, cat_p
 
 
 class BlogGenerator:
-    def __init__(self):
-        self.output_dir = "blog_output"
-        self.assets_dir = "settings/blog/assets"
-        self.exclude_dirs = ["assets", "images", "documents", "tags"]
-        self.input_dir = "blog_input"
+    def __init__(self, input_dir, output_dir, assets_dir, exclude_dirs):
+        self.input_dir = input_dir
+        self.output_dir = output_dir
+        self.assets_dir = assets_dir
+        self.exclude_dirs = exclude_dirs
         self.files_data = os.path.join(self.input_dir, ".files_data")
         self.tag_pages_dir = os.path.join(self.output_dir, "tags")
         self._snippet_cache = {}
         self.sanity_check()
-        self.run_pipeline()
 
-    def run_pipeline(self):
+    def run_pipeline(self, update_all):
         self.load_titles()
-        self.check_for_changes()
+        self.check_for_changes(update_all)
         self.update_category_and_post_pages()
         if self.index_data:     # only if updates needed
             self.generate_index_page(self.index_data)
@@ -100,11 +101,13 @@ class BlogGenerator:
             yaml_metadata = doc.__next__()
         return yaml_metadata
 
-    def check_for_changes(self):
-        if os.path.exists(self.files_data):
+    def check_for_changes(self, update_all=False):
+        if os.path.exists(self.files_data) and not update_all:
             with open(self.files_data) as f:
                 files_data = json.load(f)
         else:
+            if update_all:
+                print(f"Updating all files")
             files_data = {"files": {}}
         files = os.listdir(self.input_dir)
         for f in files:
@@ -141,13 +144,25 @@ class BlogGenerator:
             json.dump(files_data, dump_file, default=str)
         self.files_data = files_data
 
-    def generate_post_page(self, post_file, category):
+    def generate_post_page(self, post_file, metadata):
         p = Popen(f"/usr/bin/pandoc -r markdown+simple_tables+table_captions+yaml_metadata_block+raw_html --toc -t html -F pandoc-citeproc --csl=settings/csl/ieee.csl  --template=settings/blog/post.template -V layout_dir=settings/blog  {post_file}", shell=True, stdout=PIPE, stderr=PIPE)
         out, err = p.communicate()
         if err:
             print(err)
         page = out.decode("utf-8")
+        date = metadata["date"]
+        tags = metadata["tags"].split(",")
+        tags = [t.strip().replace(" ", "_").lower() for t in tags]
+        tags = ", ".join([f"<a href='../tags/{tag}.html'>{tag}</a>" for tag in tags])
+        category = metadata["category"]
+        edited = None
+        if "edited" in metadata:
+            edited = metadata["edited"]
         page = self.fix_title(category, page, prefix=True)
+        page = page.replace("$ADD_DATA$", f'<span>Posted on: {date},' +
+                            (f'Edited on: {edited}' if edited else '') + ' in Category: ' +
+                            f'<a href="../{category}.html">{category}</a>' +
+                            (f", tags: {tags}" if tags else "") + "</span>")
         return page
 
     # TODO: code formatting for programming stuff
@@ -155,10 +170,10 @@ class BlogGenerator:
         for fname, fval in self.files_data["files"].items():
             if fval["update"] and "category" in fval["metadata"]:
                 print(f"Generating post {fname}")
-                category = fval["metadata"]["category"]
+                metadata = fval["metadata"]
                 page = self.generate_post_page(os.path.join(self.input_dir, fname),
-                                               category)
-                with open(os.path.join(self.output_dir, category.lower(),
+                                               metadata)
+                with open(os.path.join(self.output_dir, metadata["category"].lower(),
                                        fname.replace(".md", ".html")), "w") as f:
                     f.write(page)
 
@@ -189,7 +204,7 @@ class BlogGenerator:
                 temp["date"] = self.files_data["files"][page]["metadata"]["date"]
                 tags = self.files_data["files"][page]["metadata"]["tags"]
                 tags = [t.strip() for t in tags.split(",")]
-                temp["tags"] = [t.replace(" ", "_") for t in tags]
+                temp["tags"] = [t.replace(" ", "_").lower() for t in tags]
                 html_file = os.path.join(self.output_dir, cat, page.replace(".md", ".html"))
                 temp["snippet"] = self.get_snippet_content(html_file)
                 temp["path"] = "/".join([cat, page.replace(".md", ".html")])
@@ -307,7 +322,7 @@ class BlogGenerator:
         for fname, fval in self.files_data["files"].items():
             if "category" in fval["metadata"]:  # only posts
                 tags = fval["metadata"]["tags"]
-                tags = [t.strip().replace(" ", "_") for t in tags.split(",")]
+                tags = [t.strip().replace(" ", "_").lower() for t in tags.split(",")]
                 for tag in tags:
                     if tag not in all_tags:
                         all_tags[tag] = []
@@ -346,8 +361,39 @@ class BlogGenerator:
 
 
 # NOTE: Initialize and export the function
-post_processor = BlogGenerator()
 
 
-# if __name__ == "__main__":
-#     post_processor([])
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-a", "--update-all", action="store_true",
+                        help="Force update all files regardless of the fact if they've changed or not")
+    parser.add_argument("-c", "--config-file", default="",
+                        help="Config file to use (dummy as of now)")
+    parser.add_argument("-i", "--input-dir", default="input",
+                        help="Input directory for the blog contents")
+    parser.add_argument("-o", "--output-dir", default="output",
+                        help="Where to output the blog contents")
+    parser.add_argument("--assets-dir", default="assets",
+                        help="Location of assets dir containing js, css files etc.")
+    parser.add_argument("--exclude-dirs",
+                        default=",".join(["assets", "images", "documents", "tags"]),
+                        help="Dirs to exclude from including in category pages")
+    args = parser.parse_args()
+    config = configparser.ConfigParser()
+    if args.config_file and os.path.exists(args.config_file):
+        config.read(args.config_file)
+    elif os.path.exists("config.ini"):
+        config.read("config.ini")
+    else:
+        print("No config file present. Generating defaults")
+    # HACK: Should override these from config
+    input_dir = "blog_input"
+    output_dir = "blog_output"
+    assets_dir = "settings/blog/assets"
+    exclude_dirs = args.exclude_dirs.split(",")
+    post_processor = BlogGenerator(input_dir, output_dir, assets_dir, exclude_dirs)
+    post_processor.run_pipeline(args.update_all)
+
+
+if __name__ == "__main__":
+    main()
