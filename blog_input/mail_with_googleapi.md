@@ -64,6 +64,6 @@ simply send to `gmailer` instead. I've posted that function as a gist
 
 Basically, [mu4e](https://www.djcbsoftware.nl/code/mu/) and `smtpmail` do all
 the hard work and we steal the final product and dump it to the google client!
-Problemm solved (for now, until the bugs come :-D). I'm sure there'll be bugs, but
+Problem solved (for now, until the bugs come :-D). I'm sure there'll be bugs, but
 I'll keep maintaining the gists and if required gather them into a repo. Happy
 Emacs'ing!
