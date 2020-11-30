@@ -2,6 +2,7 @@
 title: Songs of Love and Hate
 author: Akshay Badola
 date: 2020-06-05
+edited: 2020-06-06
 link-citations: true
 category: misc
 keywords: Leonard Cohen, Songs of Love and Hate, Pathos
@@ -58,4 +59,6 @@ reduce it to more primordial feelings which as a consequence would be less
 evolved, and less...human. But that's now what I said just a little earlier, is
 it? Man (and art, and perhaps even science) exists at the intersection of the
 primitive and the refined, the heart and the mind, the impetus and the
-reason. "I" who thinks may only think if "I" feel like doing so.
+reason. "I" who thinks may only think if "I" feel like doing so. And so here I
+am thinking what I'm feeling trying to make sense of it, and simultaneously
+thinking because I'm feeling. In short, I'm lost.
