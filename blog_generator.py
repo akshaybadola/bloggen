@@ -127,6 +127,8 @@ class BlogGenerator:
         with open(filename) as f:
             doc = yaml.load_all(f, Loader=yaml.FullLoader)
             yaml_metadata = doc.__next__()
+        if "date" in yaml_metadata:
+            yaml_metadata["date"] = str(yaml_metadata["date"])
         return yaml_metadata
 
     def check_for_changes(self, update_all=False):
@@ -161,9 +163,9 @@ class BlogGenerator:
                         files_data["files"][f]["metadata"] = self.extract_metadata(
                             os.path.join(self.input_dir, f))
                         metadata = files_data["files"][f]["metadata"]
-                        if "ignore" in metadata and not metadata["ignore"]:
+                        if "ignore" not in metadata:
                             files_data["files"][f]["update"] = True
-                        else:
+                        elif "ignore" in metadata and metadata["ignore"]:
                             files_data["files"].pop(f)
                             print(f"Ingore set to true. Ignoring file {f}")
                     else:
@@ -442,9 +444,9 @@ def main():
     assets_dir = "settings/blog/assets"
     # FIXME: This is unused
     exclude_dirs = args.exclude_dirs.split(",")
-    post_processor = BlogGenerator(input_dir, output_dir, layout_dir, csl_dir,
-                                   assets_dir, exclude_dirs)
-    post_processor.run_pipeline(args.update_all)
+    generator = BlogGenerator(input_dir, output_dir, layout_dir, csl_dir,
+                              assets_dir, exclude_dirs)
+    generator.run_pipeline(args.update_all)
 
 
 if __name__ == "__main__":

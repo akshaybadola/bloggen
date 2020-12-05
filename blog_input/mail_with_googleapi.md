@@ -2,6 +2,7 @@
 title: Sending Mail with Python and Googleapi for Emacs
 author: Akshay Badola
 date: 2020-12-01
+edited: 2020-12-06
 category: emacs
 keywords: emacs, mu4e, emacs-lisp, python, mail, gmail
 tags: emacs, mail, python, lisp
@@ -67,3 +68,38 @@ the hard work and we steal the final product and dump it to the google client!
 Problem solved (for now, until the bugs come :-D). I'm sure there'll be bugs, but
 I'll keep maintaining the gists and if required gather them into a repo. Happy
 Emacs'ing!
+
+## Update
+
+So after all this, one issue still niggled me. Currently I use [offlineimap](http://www.offlineimap.org/) to
+retrieve mail from the IMAP servers and it authenticates via some parameters in
+`.offlineimaprc`. One can fetch passwords from
+[pass](https://www.passwordstore.org/) or through GPG encrypted files directly
+but it can get annoying as you'll have to fill in passphrase each time.
+
+So what the
+[gmailer](https://gist.github.com/akshaybadola/862c01471f899afdc7a8970de1b5052c)
+does is ask for credentials once and then they're with the app with no way to
+retrieve them. Of course you have to trust your python interpreter and the OS
+that the memory cannot be snooped, but we'll assume that that's the case. 
+
+Now [offlineimap](http://www.offlineimap.org/) is run from the command line and
+while the docs say that it can be used as a library, I found several problems
+with that.
+
+```python
+  oi = OfflineImap()
+  oi.run()
+```
+
+Now, the problem that arises is that you can only call this once. They've used
+some weird `ConstProxy` class to make sure that all the variables are set only
+once, so that the class can be instantiated only once also and the parameters
+are set only from either the command line or the config file. That's insane!
+Though I think the restrictions are there so that multiple processes don't try
+to write to same maildir.
+
+Also did I mention that the entire thing is in `python2`?  While there's a
+`python3` project underway, it's still far from being production ready. So I can
+either hack the class or let it go for now, and I think I'll just let things
+be. Maybe one of these days I'll get annoyed and hack it.
