@@ -4,56 +4,19 @@ import yaml
 import json
 import shutil
 import hashlib
-import argparse
-import configparser
 from subprocess import Popen, PIPE
-from bs4 import BeautifulSoup
 from types import SimpleNamespace
+from bs4 import BeautifulSoup
 
-
-def title_file_string(titles):
-    "Return string which will be used to generate titles from json"
-    return f"""const titles = {titles};
-const index = Math.floor(Math.random() * titles.length);
-const title = titles[index];
-document.title = title;
-document.getElementById("header").children[0].textContent = title;"""
-
-
-def snippet_string(snippet, path, date, tags=None):
-    "Return string which will be used to generate snippets"
-    return f"""
-<div class="main parent content snippet">
-    <span><a href="{path}">
-            <h4>{snippet.heading}</h4>
-            {snippet.text}...
-          </a>
-    </span>
-<p></p><br>
-<p>Posted on: {date}""" + (f", tags: {tags}</p></div>" if tags else "</p></div>")
-
-
-def snippet_string_with_category(snippet, path, date, category, tags=None, cat_path_prefix=""):
-    """Return string which will be used to generate snippets with categories beneath it.
-    Used for posts"""
-    return f"""
-<div class="main parent content snippet">
-    <span><a href="{path}">
-            <h4>{snippet.heading}</h4>
-            {snippet.text}...
-          </a>
-    </span>
-<p></p><br>
-<p>Posted on: {date}, in Category: <a href="{cat_path_prefix}{category}.html">{category}</a>""" +\
-        (f", tags: {tags}</p></div>" if tags else "</p></div>")
+from .util import title_file_string, snippet_string, snippet_string_with_category
 
 
 class BlogGenerator:
-    def __init__(self, input_dir, output_dir, layout_dir, csl_dir,
+    def __init__(self, input_dir, output_dir, templates_dir, csl_dir,
                  assets_dir, exclude_dirs):
         self.input_dir = input_dir
         self.output_dir = output_dir
-        self.layout_dir = layout_dir
+        self.templates_dir = templates_dir
         self.csl_dir = csl_dir
         self.assets_dir = assets_dir
         # FIXME: This is unused
@@ -68,8 +31,8 @@ class BlogGenerator:
                                       "-t html"])
         self.reader_opts = " ".join(["--filter=pandoc-citeproc"])
         self.writer_opts = " ".join(["--template=" +
-                                     os.path.join(self.layout_dir, "index.template"),
-                                     f"-V layout_dir={self.layout_dir}", "--toc"])
+                                     os.path.join(self.templates_dir, "index.template"),
+                                     f"-V templates_dir={self.templates_dir}", "--toc"])
         # TODO: citation file can also be changed
         self.citation_opts = " ".join(["--csl=" + os.path.join(self.csl_dir, "ieee.csl")])
         self.index_cmd = " ".join([self.pandoc_cmd, self.general_opts,
@@ -94,12 +57,12 @@ class BlogGenerator:
 
     def load_titles(self):
         print("Loading titles and generating files")
-        with open("blog_input/titles.json") as f:
+        with open(os.path.join(self.input_dir, "titles.json")) as f:
             self.titles = json.load(f)
         # tf_string = title_file_string()
         for k, v in self.titles.items():
             print(f"Generated titles for {k}")
-            with open(f"blog_output/assets/js/{k}_titles.js", "w") as f:
+            with open(os.path.join(self.output_dir, f"assets/js/{k}_titles.js"), "w") as f:
                 # f.write(tf_string.replace("$TITLES$", str(v)))
                 f.write(title_file_string(v))
 
@@ -299,7 +262,7 @@ class BlogGenerator:
     #       input and output parser for pandoc, similar to pandocwatch
     def generate_index_page(self, data):
         print(f"Generating index page")
-        p = Popen(f"{self.index_cmd} blog_input/index.md",
+        p = Popen(f"{self.index_cmd} {self.input_dir}/index.md",
                   shell=True, stdout=PIPE, stderr=PIPE)
         out, err = p.communicate()
         page = out.decode("utf-8")
@@ -307,7 +270,7 @@ class BlogGenerator:
             print(err)
         menu_string = self.menu_string(self.categories)
         page = page.replace("$INDEX_TOC$", menu_string)
-        index_path = os.path.join("blog_output", "index.html")
+        index_path = os.path.join(self.output_dir, "index.html")
         snippets = []
         data.sort(key=lambda x: x["date"], reverse=True)
         for d in data:
@@ -325,7 +288,7 @@ class BlogGenerator:
 
     # TODO: JS 5-6 snippets at a time with <next> etc.
     def generate_category_page(self, category, data):
-        p = Popen(f"{self.category_cmd} blog_input/{category}.md",
+        p = Popen(f"{self.category_cmd} {self.input_dir}/{category}.md",
                   shell=True, stdout=PIPE, stderr=PIPE)
         out, err = p.communicate()
         page = out.decode("utf-8")
@@ -348,7 +311,7 @@ class BlogGenerator:
             f.write(page)
 
     def generate_tag_pages(self):
-        p = Popen(f"{self.tag_cmd} blog_input/tag.md",
+        p = Popen(f"{self.tag_cmd} {self.input_dir}/tag.md",
                   shell=True, stdout=PIPE, stderr=PIPE)
         out, err = p.communicate()
         page = out.decode("utf-8")
@@ -400,54 +363,3 @@ class BlogGenerator:
 
     def generate_quotes_page(self):
         pass
-
-
-# NOTE: Initialize and export the function
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-a", "--update-all", action="store_true",
-                        help="Force update all files regardless of " +
-                        "the fact if they've changed or not")
-    # FIXME: Unused
-    parser.add_argument("-c", "--config-file", default="",
-                        help="Config file to use (dummy as of now)")
-    parser.add_argument("-i", "--input-dir", default="input",
-                        help="Input directory for the blog contents")
-    parser.add_argument("-o", "--output-dir", default="output",
-                        help="Where to output the blog contents")
-    parser.add_argument("-l", "--layout-dir", default="layout",
-                        help="Directory for the blog templates and layout")
-    # FIXME: Unused
-    parser.add_argument("-p", "--prompt", action="store_true",
-                        help="Prompt from user before adding any new file")
-    parser.add_argument("--csl-dir", default="csl",
-                        help="Directory where the csl files are kept")
-    parser.add_argument("--assets-dir", default="assets",
-                        help="Location of assets dir containing js, css files etc.")
-    parser.add_argument("--exclude-dirs",
-                        default=",".join(["assets", "images", "documents", "tags"]),
-                        help="Dirs to exclude from including in category pages")
-    args = parser.parse_args()
-    config = configparser.ConfigParser()
-    # NOTE: Config file can contain pandoc generation options also
-    if args.config_file and os.path.exists(args.config_file):
-        config.read(args.config_file)
-    elif os.path.exists("config.ini"):
-        config.read("config.ini")
-    else:
-        print("No config file present. Using defaults")
-    # HACK: Should override these from config
-    input_dir = "blog_input"
-    output_dir = "blog_output"
-    layout_dir = "settings/blog"
-    csl_dir = "settings/csl"
-    assets_dir = "settings/blog/assets"
-    # FIXME: This is unused
-    exclude_dirs = args.exclude_dirs.split(",")
-    generator = BlogGenerator(input_dir, output_dir, layout_dir, csl_dir,
-                              assets_dir, exclude_dirs)
-    generator.run_pipeline(args.update_all)
-
-
-if __name__ == "__main__":
-    main()

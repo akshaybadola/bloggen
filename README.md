@@ -1,9 +1,11 @@
 # Simple Blog Generation with Pandoc
 
-The blog is lightweight and could be
-rendered with a text based browser. The repository contains both the blog
-contents and the python script used to generate it. The styles were customized
-by me.
+Simple and effective Blog Generator with Pandoc. Can read yaml metadata from
+headers and generate meta pages with `tags` and `categories` with corresponding
+TOC. The LITE version can be rendered with a text based browser without JS
+also.
+
+A shinier React version will be added soon.
 
 Everything in the repo is under `CC-BY-SA 4.0`. See LICENSE or
 https://creativecommons.org/licenses/by-sa/4.0/ for details.
