@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 import argparse
 import configparser
 
@@ -26,9 +27,16 @@ def main():
                         help="Location of assets dir containing js, css files etc. (default: assets)")
     parser.add_argument("--templates-dir", default="templates",
                         help="Directory for of pandoc templates (default: templates)")
+    parser.add_argument("--bib-dirs", default=["bibs"],
+                        help="Directories to search for bibtex files (default: [bibs])")
     parser.add_argument("--exclude-dirs",
                         default=",".join(["assets", "images", "documents", "tags"]),
                         help="Dirs to exclude from including in category pages")
+    parser.add_argument("--citation-style",
+                        default="ieee",
+                        help="\n".join(["Which citations style to use.",
+                                        "The value denotes the name of which CSL file to use.",
+                                        "The CSL file must be present in the CSL directory."]))
     args = parser.parse_args()
     config = configparser.ConfigParser()
     # NOTE: Config file can contain pandoc generation options also
@@ -38,10 +46,27 @@ def main():
         config.read("config.ini")
     else:
         print("No config file present. Using defaults")
+
+    def check_arg(k, v):
+        if k == "bib_dirs":
+            v = v.split(",")
+            if all(map(os.path.exists, v)):
+                return v
+            else:
+                raise ValueError()
+        elif k == "citation_style":
+            return v
+        else:
+            raise AttributeError()
+    for x in config["default"]:
+        # TODO: All these should be validated
+        if getattr(args, x):
+            setattr(args, x, check_arg(x, config["default"][x]))
     # FIXME: This is unused
     exclude_dirs = args.exclude_dirs.split(",")
-    generator = BlogGenerator(args.input_dir, args.output_dir, args.templates_dir,
-                              args.csl_dir, args.assets_dir, exclude_dirs)
+    params = map(Path, [args.input_dir, args.output_dir, args.templates_dir,
+                        args.csl_dir, args.assets_dir])
+    generator = BlogGenerator(*params, args.bib_dirs, exclude_dirs, args.citation_style)
     generator.run_pipeline(args.update_all)
 
 

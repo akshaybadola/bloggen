@@ -1,4 +1,7 @@
-from typing import Any, List
+from typing import Any, List, Union
+import re
+import os
+import yaml
 
 
 def title_file_string(titles: str) -> str:
@@ -39,3 +42,27 @@ def snippet_string_with_category(snippet: Any, path: str, date: str,
 <p></p><br>
 <p>Posted on: {date}, in Category: <a href="{cat_path_prefix}{category}.html">{category}</a>""" +\
         (f", tags: {tags}</p></div>" if tags else "</p></div>")
+
+
+def extract_metadata(filename):
+    with open(filename) as f:
+        doc = yaml.load_all(f, Loader=yaml.FullLoader)
+        yaml_metadata = doc.__next__()
+    if "date" in yaml_metadata:
+        yaml_metadata["date"] = str(yaml_metadata["date"])
+    return yaml_metadata
+
+
+def find_bibliographies(bib_files: Union[str, List[str]], bib_dirs: List[str]):
+    retval = []
+    if isinstance(bib_files, str):
+        bib_files = [bib_files]
+    for d in bib_dirs:
+        for b in bib_files:
+            if os.path.exists(os.path.join(d, b)):
+                retval.append(os.path.join(d, b))
+    return retval
+
+
+def replace_metadata(post, metadata):
+    return re.sub(r'---[\S\n ]+---', f'---\n{yaml.dump(metadata)}---', post)

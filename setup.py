@@ -24,7 +24,7 @@ setup(
         "Intended Audience :: Developers",
         "Intended Audience :: End Users/Desktop",
         "Intended Audience :: Science/Research",
-        "License :: CC-BY-SA 4.0",
+        "License :: OSI Approved :: MIT License",
         "Topic :: Documentation",
         "Topic :: Internet",
         "Topic :: Internet :: WWW/HTTP :: Dynamic Content :: Content Management System",
@@ -41,7 +41,9 @@ setup(
     include_package_data=True,
     keywords='blog html markdown',
     python_requires=">=3.6, <=4.0",
-    install_requires=["PyYAML==5.4.1", "beautifulsoup4==4.9.3"],
+    install_requires=[
+        "PyYAML==5.4.1",
+        "beautifulsoup4==4.9.3"],
     entry_points={
         'console_scripts': [
             'bloggen = bloggen.__main__:main',
