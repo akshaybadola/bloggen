@@ -43,7 +43,8 @@ setup(
     python_requires=">=3.6, <=4.0",
     install_requires=[
         "PyYAML==5.4.1",
-        "beautifulsoup4==4.9.3"],
+        "beautifulsoup4==4.9.3",
+        "common-pyutil>=0.3.0"],
     entry_points={
         'console_scripts': [
             'bloggen = bloggen.__main__:main',
